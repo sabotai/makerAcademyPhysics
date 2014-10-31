@@ -13,8 +13,11 @@ boolean auto, showTicks, showTime;
 ArrayList<PVector> graphPoints;
 int startX, startY; //(0,0) point in the graph
 
+
+
+
 void setup() {
-  size(1280, 720); 
+  size(1920, 1080); 
   x = 0;
   y = ellipseSize / 2;
   ellipseSize = 100;
