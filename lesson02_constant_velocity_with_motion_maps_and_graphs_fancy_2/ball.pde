@@ -13,11 +13,11 @@ public class Ball {
   boolean accelerating;
 
   public Ball(float _speed) {
-    accel = random(0.01, 0.5); //set acceleration
+    accel = random(0.001, 0.005); //set acceleration
     x = 0;
     y = ellipseSize / 2;
     ellipseSize = 100;
-    speed = _speed *  unit;
+    speed = (_speed *  unit);
 
     startX = int(ellipseSize * 1.5);
     startY = height - ellipseSize;
@@ -42,9 +42,9 @@ public class Ball {
   }
 
   public void update() {
-
+    
     unitsTravelled = x / unit;
-    x = x + (speed / frameRate);
+    x = x + (speed);// / frameRate);
 
     //if its one of the accelerating balls and acceleration is turned on
     if (accelerating && acceleration) { 
@@ -88,33 +88,14 @@ public class Ball {
 
     float where = 0;
 
-    where = x+x-furthest;
+    where = x;
     if (furthest > width - ellipseSize) {
       float temp = furthest-(width-ellipseSize);
       where -= temp;
-    } else {
-      where = constrain(where, 0, where);
     }
+    println(where/unit);
     ellipse(where, y, ellipseSize, ellipseSize); 
 
-    /*
-
-     if (x < furthest) { // ensure that the slower ones fall behind once the fastest goes beyond the border
-     //if ( x < width  - ellipseSize){
-     //ellipse(x- ((fastestSpeed-speed)*framesOver), y, ellipseSize, ellipseSize);
-     //}  else {
-     
-     //ellipse(width - ellipseSize, y, ellipseSize, ellipseSize);
-     //}
-     } else {
-     
-     if ( x < width  - ellipseSize) {
-     ellipse(x-((fastestSpeed-speed)*framesOver), y, ellipseSize, ellipseSize);
-     } else {
-     ellipse(width - ellipseSize, y, ellipseSize, ellipseSize);
-     }
-     }
-     */
   }
 
   public void drawGraph() {

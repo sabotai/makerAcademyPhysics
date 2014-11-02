@@ -1,15 +1,22 @@
 ////////////////////////////////
 // 
 ////////////////////////////////
+//CONTROLS
+//RIGHT ARROW:  switch acceleration on/off; by default, the circles with lower starting speeds will accelerate
+//UP ARROW:     Resume from paused state
+//DOWN ARROW:   Pause state
+//ALT:          alternate between displaying the distance travelled and speed  
+////////////////////////////////
 
-//add fullscreen
-//fix the acceleration top thing
 
-int numBalls = 4; //maximum of 4 balls on screen
-float fastestAllowed = 3;
+int numBalls = 3; //maximum of 4 balls on screen
+float fastestAllowed = 5; //fastest speed
 boolean acceleration = false; //turn acceleration on or off
+float unit = 40; //pixel size of units (inverse relationship to how many units on-screen)
 
-float unit = 40; //size of units
+
+
+
 float time;
 boolean showSpeed;
 int ellipseSize = 100;
@@ -25,17 +32,16 @@ float framesOver = 0;
 
 void setup() {
   size(1280, 720);
-  
+  fastestAllowed *= .02;
 
-  unit = 40;
   balls = new ArrayList<Ball>();  // Create an empty ArrayList
   for (int i = 0; i < numBalls; i++) {
-    float spd = random(0.1, fastestAllowed);
+    float spd = random(fastestAllowed * 0.1, fastestAllowed);
     if (spd > fastestSpeed) { // keep track of which one is the fastest
 
       fastestSpeed = spd;
     } else {
-      spd *= (fastestAllowed * 0.3);
+      spd *= random(0.1, 0.5); //further differentiate the fastest one
     }
     balls.add(new Ball(spd));  // Start by adding one element
   }
@@ -45,15 +51,9 @@ void setup() {
     Ball ball = balls.get(i);
     ball.init();
   }
-
-
-
-  //framert = 60;
-  //frameRate(framert);
 }
 
 void draw() {  
-  
   background(0);
   stroke(255);
   strokeWeight(6);
@@ -63,36 +63,27 @@ void draw() {
 
     checkSpeeds(i, ball.speed);
 
-    ball.update();
-    ball.draw();
+    ball.update(); //change values
+    ball.draw(); //draw each ball
   }
   pushMatrix();
-  scaleGraph();
-  graph();
-  for (int i = 0; i < balls.size (); i+=1) {
-    Ball ball = balls.get(i);
-
-    ball.drawGraph();
-  }
+    scaleGraph();
+    graph();
+    for (int i = 0; i < balls.size (); i+=1) {
+      Ball ball = balls.get(i);
+  
+      ball.drawGraph();
+    }
   popMatrix();
   //println(x);
   data();
 
 
-
-
-
-  //moving ellipse at the top
-
-
-
-  //move this many positions each frame
   if (paused) {
-    noLoop();
+    noLoop(); //pause it if necessary
   }
 
-  time = (float(millis()) / 1000) - pauseTime;
-  //println(time);
+  time = (float(millis()) / 1000) - pauseTime; //update the time
 }
 
 void scaleGraph() {
@@ -110,7 +101,7 @@ void scaleGraph() {
   }
 
   //make the graph smaller if it exceeds the bounds
-  int maxFit = 13;
+  float maxFit = (40/unit) * 13;
   if ((highUnitsTravelled > maxFit) && (highGraphY < ellipseSize)) {
     float scaleAmt = 1 / (highUnitsTravelled / maxFit);
     translate(0, height + (1-scaleAmt * height));
@@ -132,39 +123,43 @@ void graph() {
   textSize(32);
 
 
-    text("Units", ellipseSize+15, height/2);
-    text("Time", width/3, height - ellipseSize + 50);
-
+  text("Units", ellipseSize+15, height/2);
+  text("Time", width/3, height - ellipseSize + 50);
 }
 
-void data() {
+void data() { //sets up the data displayed
   fill(255);
-    textSize(120);
-    textAlign(RIGHT);
-    noStroke();
-    for (int i = 0; i < balls.size (); i++) {
+  textSize(120);
+  textAlign(RIGHT);
+  noStroke();
+  for (int i = 0; i < balls.size (); i++) {
 
-      Ball ball = balls.get(i);
-      fill(ball.ellipseColor);
-      if (!showSpeed) {
-        int tempDist = int(ball.unitsTravelled);
-        text(tempDist + " units", width, (height/balls.size()) + (i * 120));
-      } else {
-        float tempSpeed = 10 * (ball.unitsTravelled / time);
-        tempSpeed = int(tempSpeed);
-        tempSpeed /=   10;
-        text(tempSpeed + " units/s", width, (height/balls.size()) + (i * 120));
-        
-      }
-      //ellipse(width-40, (height/2) + (i * 120)-30, 60, 60);
-    }
-    fill(255);
-    textSize(100);
-    //text("/ " + int(time) + " sec.", width, height/5 * 4);
+    Ball ball = balls.get(i);
+    fill(ball.ellipseColor);
     if (!showSpeed) {
-      text("/ " + int(time) + " sec.", width, (height/balls.size()) + ((balls.size())* 120));
+      int tempDist = int(ball.unitsTravelled);
+      text(tempDist + " units", width, (height/balls.size()) + (i * 120));
+    } else {
+      float tempSpeed = 10 * (ball.unitsTravelled / time);
+      tempSpeed = int(tempSpeed);
+      tempSpeed /=   10;
+      text(tempSpeed + " units/s", width, (height/balls.size()) + (i * 120));
     }
+    //ellipse(width-40, (height/2) + (i * 120)-30, 60, 60);
+  }
+  fill(255);
+  textSize(100);
+  //text("/ " + int(time) + " sec.", width, height/5 * 4);
+  String timeString;
   
+  if (!showSpeed) {
+    timeString = "/ " + int(time) + " sec.";
+    
+  } else {
+    
+    timeString = int(time) + " sec.";
+  }
+    text(timeString, width, (height/balls.size()) + ((balls.size())* 120));
 }
 
 void checkSpeeds(int g, float _Speed) {
@@ -192,12 +187,12 @@ void keyPressed() {
     showSpeed = !showSpeed;
   } 
   if (keyCode == DOWN) {
-    if (!paused){
-      
-    stopTime = millis();
+    if (!paused) {
+
+      stopTime = millis();
     }
-      
-    
+
+
     paused = true;
   }
   if (keyCode == UP) {
@@ -215,10 +210,5 @@ void keyPressed() {
   if (keyCode == RIGHT) {
     acceleration = !acceleration;
   }
-  /*
-  if (keyCode == LEFT) {
-    setup();
-  }
-  */
 }
 
