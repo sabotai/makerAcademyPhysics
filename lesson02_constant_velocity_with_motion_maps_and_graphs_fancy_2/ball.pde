@@ -1,9 +1,7 @@
 public class Ball {
   float x, y; //x and y of the original moving ellipse
-  //int graphX, graphY; //the x and y position of the graph representation of the ellipse
   int ellipseSize;
   float unitsTravelled;
-  //boolean auto, showTicks, showTime;
   ArrayList<PVector> graphPoints;
   float startX, startY; //(0,0) point in the graph
   float graphX, graphY;
@@ -12,50 +10,49 @@ public class Ball {
   boolean fastest, stop;
   float moveGraph;
   float accel;
+  boolean accelerating;
 
   public Ball(float _speed) {
-    if (acceleration){
-    accel = random(1.001, 1.006);}
-    else {
-     accel = 1; 
-    }
+    accel = random(0.01, 0.5); //set acceleration
     x = 0;
     y = ellipseSize / 2;
     ellipseSize = 100;
-    speed = _speed *  unit;//int(_speed/unit * frameRate);
+    speed = _speed *  unit;
 
-    
-    println(_speed);
     startX = int(ellipseSize * 1.5);
     startY = height - ellipseSize;
 
     graphPoints = new ArrayList<PVector>();  // Create an empty ArrayList
     graphPoints.add(new PVector(startX, startY));  // Start by adding one element
 
-    ellipseColor = color(random(80, 255), random(80, 255), random(80, 255));
+    ellipseColor = color(random(80, 255), random(80, 255), random(80, 255), 200);
 
     graphX = startX;
     graphY = startY;
   }
 
-  public void update() {
-    if ((speed/unit) < fastestSpeed) {
-      fastest = false;
-    } else {
-      fastest = true;
-    }
-    println(fastest);
+  public void init() { //only run init after all balls are created
 
+    if ((speed/unit) < fastestSpeed) {
+      accelerating = true;
+    } else {
+      accelerating = false;
+    }
+    println(accelerating + " accelerating");
+  }
+
+  public void update() {
 
     unitsTravelled = x / unit;
+    x = x + (speed / frameRate);
 
+    //if its one of the accelerating balls and acceleration is turned on
+    if (accelerating && acceleration) { 
+      speed += accel;
+    }
 
-    if (auto) {
-      x = x + (speed / framert);
-      
-      if (!fastest && acceleration){ //acceleration
-        x *= accel;
-      }
+    if (x > furthest) { //keep track of the leader
+      furthest = x;
     }
   }
 
@@ -65,12 +62,12 @@ public class Ball {
 
     for (int i = 0; i <= width; i += unit) {
 
-      if (fastest) {
+      if (x == furthest) { //if it's the leader
         if ( x < width  - ellipseSize) { //make the regular lines
           line(i, 0, i, unit);
         } else { //make moving lines after it reaches the end
 
-        framesOver += 1/ (width/unit);
+          framesOver += 1/ (width/unit);
 
           //if (fastest) {
 
@@ -89,18 +86,35 @@ public class Ball {
     stroke(ellipseColor);
 
 
+    float where = 0;
 
-    if (!fastest) { // ensure that the slower ones fall behind once the fastest goes beyond the border
-        ellipse(x-(fastestSpeed*framesOver), y, ellipseSize, ellipseSize);
-      
+    where = x+x-furthest;
+    if (furthest > width - ellipseSize) {
+      float temp = furthest-(width-ellipseSize);
+      where -= temp;
     } else {
-      
-      if ( x < width  - ellipseSize) {
-        ellipse(x, y, ellipseSize, ellipseSize);
-      } else {
-        ellipse(width - ellipseSize, y, ellipseSize, ellipseSize);
-      }
+      where = constrain(where, 0, where);
     }
+    ellipse(where, y, ellipseSize, ellipseSize); 
+
+    /*
+
+     if (x < furthest) { // ensure that the slower ones fall behind once the fastest goes beyond the border
+     //if ( x < width  - ellipseSize){
+     //ellipse(x- ((fastestSpeed-speed)*framesOver), y, ellipseSize, ellipseSize);
+     //}  else {
+     
+     //ellipse(width - ellipseSize, y, ellipseSize, ellipseSize);
+     //}
+     } else {
+     
+     if ( x < width  - ellipseSize) {
+     ellipse(x-((fastestSpeed-speed)*framesOver), y, ellipseSize, ellipseSize);
+     } else {
+     ellipse(width - ellipseSize, y, ellipseSize, ellipseSize);
+     }
+     }
+     */
   }
 
   public void drawGraph() {
@@ -117,7 +131,6 @@ public class Ball {
     ellipse(graphX, graphY, ellipseSize/5, ellipseSize/5);
 
     for (int i = 0; i+1 <= graphPoints.size (); i+=1) {
-      //if ( 
       PVector pointA = graphPoints.get(i);
       PVector pointB;
       if (i+1 < graphPoints.size()) {
@@ -126,6 +139,7 @@ public class Ball {
         pointB = new PVector(graphX, graphY);
       }
       line(pointA.x, pointA.y, pointB.x, pointB.y);
+      ellipse(pointA.x, pointA.y, 5, 5);
     }
 
 

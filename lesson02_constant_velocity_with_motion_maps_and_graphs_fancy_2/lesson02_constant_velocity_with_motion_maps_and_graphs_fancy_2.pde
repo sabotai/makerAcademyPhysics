@@ -2,61 +2,66 @@
 // 
 ////////////////////////////////
 
-//fix the pause ability
 //add fullscreen
 //fix the acceleration top thing
-//fix reset button
 
-int numBalls = 3; //maximum of 4 balls on screen
+int numBalls = 4; //maximum of 4 balls on screen
 float fastestAllowed = 3;
 boolean acceleration = false; //turn acceleration on or off
 
-float unit = 40;
+float unit = 40; //size of units
 float time;
-boolean auto, showTicks, showTime;
+boolean showSpeed;
 int ellipseSize = 100;
-int strokeWt = 6;
-float fastestSpeed;
+float strokeWt = 6;
+float fastestSpeed, furthest;
+boolean paused;
+float stopTime, startTime, pauseTime;
 
 ArrayList<Ball> balls;
 
-int framert = 30;
 
 float framesOver = 0;
 
 void setup() {
-  size(1280, 720); 
-  auto = true;
-  showTime = true;
-  showTicks = true;
+  size(1280, 720);
+  
 
   unit = 40;
-  //ball1 = new Ball(1);
-  //  ball2 = new Ball(2);
   balls = new ArrayList<Ball>();  // Create an empty ArrayList
-  for (int i = 0; i < numBalls; i++){
+  for (int i = 0; i < numBalls; i++) {
     float spd = random(0.1, fastestAllowed);
-    if (spd > fastestSpeed){ // keep track of which one is the fastest
-      
+    if (spd > fastestSpeed) { // keep track of which one is the fastest
+
       fastestSpeed = spd;
     } else {
-     spd *= 0.2; 
+      spd *= (fastestAllowed * 0.3);
     }
     balls.add(new Ball(spd));  // Start by adding one element
   }
 
+  for (int i = 0; i < numBalls; i++) {
 
-  framert = 60;
-  frameRate(framert);
+    Ball ball = balls.get(i);
+    ball.init();
+  }
+
+
+
+  //framert = 60;
+  //frameRate(framert);
 }
 
 void draw() {  
+  
   background(0);
   stroke(255);
-  strokeWeight(strokeWt);
+  strokeWeight(6);
 
   for (int i = 0; i < balls.size (); i+=1) {
     Ball ball = balls.get(i);
+
+    checkSpeeds(i, ball.speed);
 
     ball.update();
     ball.draw();
@@ -82,37 +87,12 @@ void draw() {
 
 
   //move this many positions each frame
+  if (paused) {
+    noLoop();
+  }
 
-
-  time = float(millis()) / 1000;
+  time = (float(millis()) / 1000) - pauseTime;
   //println(time);
-}
-
-void keyPressed() {
-  if (keyCode == CONTROL) {
-    auto = !auto;
-  } 
-  if (keyCode == SHIFT) {
-    showTicks = !showTicks;
-  } 
-  if (keyCode == ALT) {
-    showTime = !showTime;
-  } 
-  if (keyCode == DOWN) {
-   noLoop();
-   }
-   if (keyCode == UP){
-    loop(); 
-   }
-
-  
-  if (keyCode == RIGHT) {
-   acceleration = !acceleration;
-   }
-   if (keyCode == LEFT) {
-   setup();
-   }
-   
 }
 
 void scaleGraph() {
@@ -134,10 +114,10 @@ void scaleGraph() {
   if ((highUnitsTravelled > maxFit) && (highGraphY < ellipseSize)) {
     float scaleAmt = 1 / (highUnitsTravelled / maxFit);
     translate(0, height + (1-scaleAmt * height));
+    strokeWt = strokeWt + (1-scaleAmt)/strokeWt;
+    strokeWeight(strokeWt);
     scale(scaleAmt);
-    //println(scaleAmt);
     //println(scaleAmt + "  " + (height + (1-scaleAmt * height)));
-    strokeWeight(strokeWt + strokeWt * (5*(1-scaleAmt)));
   }
 }
 
@@ -150,13 +130,15 @@ void graph() {
   line(ellipseSize * 1.5, height - ellipseSize, width/2, height-ellipseSize); //horizontal seconds passed line
   triangle(  width/2, height-ellipseSize - 10, width/2 + 10, height-ellipseSize, width/2, height-ellipseSize+10);  
   textSize(32);
-  text("Units", ellipseSize+15, height/2);
-  text("Time", width/3, height - ellipseSize + 50);
+
+
+    text("Units", ellipseSize+15, height/2);
+    text("Time", width/3, height - ellipseSize + 50);
+
 }
 
 void data() {
   fill(255);
-  if (showTime) {
     textSize(120);
     textAlign(RIGHT);
     noStroke();
@@ -164,13 +146,79 @@ void data() {
 
       Ball ball = balls.get(i);
       fill(ball.ellipseColor);
-      text(int(ball.unitsTravelled) + " units", width, (height/balls.size()) + (i * 120));
+      if (!showSpeed) {
+        int tempDist = int(ball.unitsTravelled);
+        text(tempDist + " units", width, (height/balls.size()) + (i * 120));
+      } else {
+        float tempSpeed = 10 * (ball.unitsTravelled / time);
+        tempSpeed = int(tempSpeed);
+        tempSpeed /=   10;
+        text(tempSpeed + " units/s", width, (height/balls.size()) + (i * 120));
+        
+      }
       //ellipse(width-40, (height/2) + (i * 120)-30, 60, 60);
     }
     fill(255);
     textSize(100);
     //text("/ " + int(time) + " sec.", width, height/5 * 4);
-    text("/ " + int(time) + " sec.", width, (height/balls.size()) + ((balls.size())* 120));
+    if (!showSpeed) {
+      text("/ " + int(time) + " sec.", width, (height/balls.size()) + ((balls.size())* 120));
+    }
+  
+}
+
+void checkSpeeds(int g, float _Speed) {
+
+  if (_Speed > fastestSpeed) { // keep track of which one is the fastest
+    fastestSpeed = _Speed;
+    for (int h = 0; h < balls.size (); h+=1) {
+      Ball ball = balls.get(h);
+      if (g == h) {
+        ball.fastest = true;
+        println(g + "  is fastest");
+      } else {
+        ball.fastest = false;
+        println(h + "  is not fastest");
+      }
+
+      //fastestSpeed = _Speed;
+    }
   }
+}
+
+
+void keyPressed() {
+  if (keyCode == ALT) {
+    showSpeed = !showSpeed;
+  } 
+  if (keyCode == DOWN) {
+    if (!paused){
+      
+    stopTime = millis();
+    }
+      
+    
+    paused = true;
+  }
+  if (keyCode == UP) {
+    if (paused) {
+      loop();
+      startTime = millis();
+      pauseTime = pauseTime + ((startTime - stopTime) / 1000);
+      startTime = 0;
+      stopTime = 0;
+      paused = false;
+    }
+  }
+
+
+  if (keyCode == RIGHT) {
+    acceleration = !acceleration;
+  }
+  /*
+  if (keyCode == LEFT) {
+    setup();
+  }
+  */
 }
 
