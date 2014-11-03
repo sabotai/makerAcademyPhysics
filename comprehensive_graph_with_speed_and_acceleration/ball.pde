@@ -54,6 +54,7 @@ public class Ball {
     if (x > furthest) { //keep track of the leader
       furthest = x;
     }
+    println(speed);
   }
 
   public void draw() {
@@ -93,7 +94,6 @@ public class Ball {
       float temp = furthest-(width-ellipseSize);
       where -= temp;
     }
-    println(where/unit);
     ellipse(where, y, ellipseSize, ellipseSize); 
 
   }

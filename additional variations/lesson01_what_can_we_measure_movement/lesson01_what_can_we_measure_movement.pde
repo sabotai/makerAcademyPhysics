@@ -12,7 +12,7 @@ boolean auto, showTicks, showTime;
 void setup() {
   size(1280, 720); 
   x = 0;
-  y = height/2;
+  y = 0;
   ellipseSize = 100;
   unit = 40;
   auto = true;

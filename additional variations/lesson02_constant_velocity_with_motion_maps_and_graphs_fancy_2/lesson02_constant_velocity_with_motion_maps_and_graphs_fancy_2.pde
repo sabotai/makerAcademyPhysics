@@ -57,6 +57,7 @@ void draw() {
   background(0);
   stroke(255);
   strokeWeight(6);
+  time = (float(millis()) / 1000) - pauseTime; //update the time
 
   for (int i = 0; i < balls.size (); i+=1) {
     Ball ball = balls.get(i);
@@ -75,7 +76,6 @@ void draw() {
       ball.drawGraph();
     }
   popMatrix();
-  //println(x);
   data();
 
 
@@ -83,7 +83,6 @@ void draw() {
     noLoop(); //pause it if necessary
   }
 
-  time = (float(millis()) / 1000) - pauseTime; //update the time
 }
 
 void scaleGraph() {
